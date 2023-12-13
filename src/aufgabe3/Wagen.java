@@ -14,7 +14,6 @@ public class Wagen extends Thread{
     }
 
     public void passagier(){
-        System.out.println("passagier eingestiegen!");
         freiePlätze--;
     }
 
