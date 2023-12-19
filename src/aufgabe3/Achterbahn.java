@@ -1,6 +1,6 @@
 package aufgabe3;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class Achterbahn {
 
@@ -8,17 +8,18 @@ public class Achterbahn {
     //private static int nPlätze = 10;
 
     public static void main(String[] args){
-        LinkedList<Wagen> wagenQueue = new LinkedList<>();
+
         Steuerung steuerung = new Steuerung();
+        ArrayList<Wagen> wagenList = new ArrayList<Wagen>();
         for (int i = 0; i < nWagen; i++) {
-            wagenQueue.add(new Wagen(steuerung));
+            wagenList.add(new Wagen(steuerung));
         }
-        steuerung.initWagenQueue(wagenQueue);
+        steuerung.setWagenArray(wagenList);
         Drehkreuz drehkreuz = new Drehkreuz(steuerung);
 
-
+        //start Threads
         drehkreuz.start();
-        for (Wagen wagen : wagenQueue) {
+        for (Wagen wagen : wagenList) {
             wagen.start();
         }
 
