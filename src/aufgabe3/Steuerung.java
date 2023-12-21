@@ -31,7 +31,7 @@ public class Steuerung {
         //Wächter: freiePlätze > 0
         while(! (freiePlätzeGesamt() > 0)){
             try {
-                System.out.println("Drehkreuz wait for empty wagen....");
+                System.out.println("Drehkreuz: wait for empty wagen....");
                 wait();
             } catch (InterruptedException e) {}
         }
@@ -46,7 +46,7 @@ public class Steuerung {
 
         if(freiePlätzeArray[nextIndex] > 0 ) {
             freiePlätzeArray[nextIndex]--;
-            System.out.println("passagier eingestiegen! Wagen " + nextIndex);
+            System.out.println("Wagen " + nextIndex + ": passagier eingestiegen! ");
 
         }else{
             System.out.print("Fehler: Wagen ist unerwartet voll!");
@@ -59,11 +59,11 @@ public class Steuerung {
         //Wächter when(i == 0 && nextWagen==0)
         while(! (freiePlätzeArray[wagenIndex] == 0 && nextWagen == wagenIndex)){
             try {
-                System.out.println("Wagen " + wagenList.indexOf(wagen) + " wait for passengers...");
+                System.out.println("Wagen " + wagenList.indexOf(wagen) + ": wait for passengers...");
                 wait();
             } catch (InterruptedException e) {}
         }
-        System.out.println("Abfahrt! Wagen" + wagenList.indexOf(wagen));
+        System.out.println("Wagen " + wagenList.indexOf(wagen) + ": Abfahrt! ");
         //notifyAll();  //nicht benötigt da sich hier nichts geändert hat was für andere Threads interessant ist - erst beim aussteigen
     }
 

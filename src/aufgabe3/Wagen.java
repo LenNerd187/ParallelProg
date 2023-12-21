@@ -8,8 +8,6 @@ public class Wagen extends Thread{
         this.steuerung = steuerung;
     }
 
-
-
     @Override
     public void run() {
         while(true) {
