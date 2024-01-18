@@ -1,4 +1,4 @@
-package assignment2.aufgabe1.package.echo;
+package assignment2.aufgabe1;
 
 import java.util.HashSet;
 import java.util.Set;

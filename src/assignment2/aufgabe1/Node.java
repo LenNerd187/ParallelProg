@@ -1,4 +1,4 @@
-package assignment2.aufgabe1.package.echo;
+package assignment2.aufgabe1;
 
 /**
  * This interface defines the methods of each node participating in the echo
