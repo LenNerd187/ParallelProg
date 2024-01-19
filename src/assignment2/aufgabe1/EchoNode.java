@@ -1,12 +1,14 @@
 package assignment2.aufgabe1;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class EchoNode extends NodeAbstract{
 
     private Node wokeUpFrom;        //the node that woke this up
     private int messageCounter = 0; //number of messages (wakeup oder echo) this node got
-
+    private final HashSet<Edge> knownEdges = new HashSet<Edge>();
     public EchoNode(String name, boolean initiator) {
         super(name, initiator);
     }
@@ -28,9 +30,10 @@ public class EchoNode extends NodeAbstract{
 
         if (initiator){
             System.out.println("Initiator got all messages back - all done :-)");
+            printResult(knownEdges);
         }else {
             System.out.println("Node " + name + " received calls from all neighbours - sending echo now");
-            wokeUpFrom.echo(this, null);
+            wokeUpFrom.echo(this, knownEdges);
         }
 
     }
@@ -93,6 +96,12 @@ public class EchoNode extends NodeAbstract{
     @Override
     public synchronized void echo(Node neighbour, Object data) {
         messageCounter++;
+        EchoNode echoNeighbour = (EchoNode) neighbour;
+        HashSet<Edge> dataSet = (HashSet<Edge>) data;
+        if(dataSet != null){
+            knownEdges.addAll(dataSet);
+        }
+        knownEdges.add(new Edge(name, echoNeighbour.name));
         notify();
     }
 
@@ -100,5 +109,13 @@ public class EchoNode extends NodeAbstract{
     public void setupNeighbours(Node... neighbours) {
         this.neighbours.clear();
         this.neighbours.addAll(List.of(neighbours));
+    }
+
+    private void printResult(HashSet<Edge> edges){
+        String result = "";
+        for(Edge edge : edges){
+            result += edge.toString() + "\n";
+        }
+        System.out.println(result);
     }
 }
