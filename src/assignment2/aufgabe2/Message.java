@@ -2,7 +2,7 @@ package assignment2.aufgabe2;
 
 public class Message {
 
-    enum Type{
+    public enum Type{
         WAKEUP,
         ECHO,
         RESULT

@@ -1,10 +1,6 @@
 package assignment2.aufgabe2;
 
-import assignment2.aufgabe1.EchoNode;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ElectionDemo {
 
