@@ -1,8 +1,6 @@
 package assignment2.aufgabe1;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class EchoNode extends NodeAbstract{
 
@@ -15,7 +13,12 @@ public class EchoNode extends NodeAbstract{
 
     @Override
     public void run() {
-        for (Node node:neighbours) {
+
+        Set<Node> tempNeighbours;
+        synchronized (this) {
+            tempNeighbours = new HashSet<Node>(neighbours);
+        }
+        for (Node node:tempNeighbours) {
             node.hello(this);
         }
 
@@ -75,10 +78,9 @@ public class EchoNode extends NodeAbstract{
     }
 
     @Override
-    public void hello(Node neighbour) {
+    public synchronized void hello(Node neighbour) {
         if (neighbours.contains(neighbour) == false){
-            EchoNode echoNode = (EchoNode) neighbour;
-            System.out.println("ERROR: Node " + name + " doesnt know its neighbour " + echoNode.name);
+            neighbours.add(neighbour);
         }
     }
 
