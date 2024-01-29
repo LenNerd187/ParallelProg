@@ -8,7 +8,6 @@ public class ElectionNode extends Node {
 
     private final HashSet<Edge> knownEdges = new HashSet<>();
     private int highestSentInitiator = -1;
-    private final boolean wantsLeader;
     private int highestEchoSent = -1;
 
     private boolean running = true;
@@ -16,19 +15,58 @@ public class ElectionNode extends Node {
     //Shared Data
     private Node wokeUpFrom;        //the node that woke this up
     private int messageCounter = 0; //number of messages (wakeup oder echo) this node got
-    private int highestKnownId;
-    private int highestKnownInitiator = -1;
+    private int highestKnownId;     //wird beim empfangen der echo Nachrichten aktualisiert
+    private int highestKnownInitiator = -1; //wird beim Empfangen der wakeup Nachrichten aktualisiert
     private Node resultReceivedFrom = null;
     private boolean resultSent = false;
 
 
 
-    public ElectionNode(int id, boolean wantsLeader) {
+    public ElectionNode(int id) {
         super(id);
         this.highestKnownId = id;
-        this.wantsLeader = new Random().nextBoolean();
-        //this.wantsLeader = wantsLeader;
     }
+
+    /**
+     * Thread Run Methode:
+     * Main Loop: sleep -> wakeup/initiate wakeups -> spread wakeups? -> send echos? -> send result? -> repeat
+     */
+    @Override
+    public void run() {
+        runInitialize();
+        System.out.println("Node " + id + " initialized.");
+        while(running) {
+
+            //Loop: sleep -> wakeup -> spread wakeups? -> send echos? -> send result? -> repeat
+
+            waitForMessages(100);
+
+            synchronized (this){
+                if (wokeUpFrom == null) {
+                    //uns hat noch keine Welle erreicht. Der Timer hat uns geweckt. Wollen wir Leader werden?
+                    boolean wantsInitiator = new Random().nextBoolean();
+                    if (wantsInitiator){
+                        System.out.println("Node " + id + " initiating election wave");
+                        highestKnownInitiator = id;
+                        wokeUpFrom = this;
+                    }
+                }
+            }
+
+            //wakeups to spread??
+            sendWakeupMessages();
+
+            //send echo?
+            sendEchoMessages();
+
+            //Send resultMessages?
+            sendResultMessages();
+
+        } // Main Loop
+
+    } // run Method
+
+
 
     /**
      * im kritischen Bereich wird überprüft ob wir alle Nachrichten bekommen haben und noch kein Echo zu dieser Welle verschickt haben
@@ -77,8 +115,11 @@ public class ElectionNode extends Node {
     }
 
 
-
-
+    /**
+     * im kritischen Bereich wird überprüft ob wir ein Ergebnis haben welches wir noch nicht versendet haben
+     * evtl werden Result-Nachrichten erstellt - das "verschicken" an die Nachbarn ist NICHT mehr im kritischen Bereich
+     * um die inkrementelle Anforderung der Locks zu umgehen
+     */
     private void sendResultMessages(){
         LinkedList<Message> messagesToSent = new LinkedList<>();
         synchronized (this){
@@ -95,47 +136,12 @@ public class ElectionNode extends Node {
         sendMessages(messagesToSent);
     }
 
-
-    @Override
-    public void run() {
-        runInitialize();
-
-        while(running) {
-
-            //Loop: sleep -> wakeup -> spread wakeups -> check messageCounter -> repeat
-            //if we didnt already received a relevant wakeup
-            //wait for wakeup or election start timer?
-            if (wantsLeader && wokeUpFrom == null) {
-                waitForMessages(200);
-            } else {
-                waitForMessages(-1);
-            }
-
-
-            synchronized (this){
-                if (wokeUpFrom == null) {
-                    //we woke up because we want to initiate a wave
-                    System.out.println("Node " + id + " initiating election wave");
-                    highestKnownInitiator = id;
-                    wokeUpFrom = this;
-                }
-            }
-
-            //wakeups to spread??
-            sendWakeupMessages();
-
-            //send echo?
-            sendEchoMessages();
-
-            //Send resultMessages?
-            sendResultMessages();
-
-        } // Main Loop
-
-    } // run Method
-
-    //NOT synchronized
-    //sending messages by acquiring receiving Nodes Lock and writing Shared Data
+    /**
+     * Beim Versenden hat der Sende-Thread den Lock des Empfänger-Node aber NICHT den Lock des Sende-Node
+     * um die inkrementelle Anforderung der Locks zu umgehen
+     *
+     * @param messages Liste mit Nachrichten zum versenden
+     */
     private void sendMessages(List<Message> messages){
         while(messages.size() > 0){
             Message message = messages.removeFirst();
@@ -154,7 +160,13 @@ public class ElectionNode extends Node {
     }
 
 
-
+    /**
+     * Erhalten einer Wakeup Nachricht. Synchronized: Der sendende Thread hält den Lock vom empfangenden Node
+     * @param neighbour Der Nachbarknoten der diese wakeup Nachricht verschickt
+     *
+     * @param initiatorId Die ID des Initiatorknoten, die Wakeupwellen mit höherer ID überschreiben die mit kleinerer ID
+     *
+     */
     public synchronized void wakeup(Node neighbour, int initiatorId) {
         if (wokeUpFrom == null){
             System.out.println("Node " + id + " first wakeup wave("+ initiatorId  +  ") called from " + neighbour.id);
@@ -180,13 +192,13 @@ public class ElectionNode extends Node {
         }
     }
 
-
-    public synchronized void result(Node neighbour, int value){
-        System.out.println("Node " + id + " received result(" + value + ") from Node " + neighbour.id);
-        highestKnownId = value;
-        resultReceivedFrom = neighbour;
-    }
-
+    /**
+     * Erhalten einer Echo Nachricht. Synchronized: Der sendende Thread hält den Lock vom empfangenden Node
+     * @param neighbour Der Nachbarknoten der diese wakeup Nachricht verschickt
+     * @param data evtl Daten die im Netzwerk verteil werden müssen (Spannender Baum?)
+     * @param initiatorId Die ID des Initiatorknoten, die Wakeupwellen mit höherer ID überschreiben die mit kleinerer ID
+     * @param highestVote höchste bekannte Knoten-ID die an den Initiator durchgegeben wird
+     */
     public synchronized void echo(Node neighbour, Object data, int initiatorId, int highestVote) {
         if (initiatorId == highestKnownInitiator){
             System.out.println("Node " + id + " received echo(" + initiatorId + ") from Node " + neighbour.id);
@@ -201,6 +213,22 @@ public class ElectionNode extends Node {
         }
     }
 
+    /**
+     * Erhalten einer Wakeup Nachricht. Synchronized: Der sendende Thread hält den Lock vom empfangenden Node
+     * @param neighbour Der Nachbarknoten der diese wakeup Nachricht verschickt
+     * @param value Das Ergebnis: Die höchste bekannte Knoten-ID
+     */
+    public synchronized void result(Node neighbour, int value){
+        System.out.println("Node " + id + " received result(" + value + ") from Node " + neighbour.id);
+        highestKnownId = value;
+        resultReceivedFrom = neighbour;
+    }
+
+
+    /**
+     * Thread legt sich schlafen und wartet auf ein Notify oder auf timeoutMillis
+     * @param timeoutMillis timeout in Millisekunden
+     */
     private synchronized void waitForMessages(long timeoutMillis){
         try {
             //only if there is no wakeup wave to send
@@ -208,28 +236,40 @@ public class ElectionNode extends Node {
             if ((highestKnownInitiator <= highestSentInitiator) &&
                     (messageCounter < neighbours.size()))  {
                 if (timeoutMillis > 0) {
-                    wait(200);
+                    wait(timeoutMillis);
                 } else {
                     wait();
                 }
             }
         } catch (InterruptedException e) {}
     }
+
+    /**
+     * Hello-Nachrichten an alle bekannten Nachbarn senden.
+     * Das Set neighbours wird synchronized kopiert und dann aber außerhalb des
+     * synchronized Blocks versendet um die inkrementelle Anforderung der Locks zu umgehen
+     */
     private void runInitialize(){
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException ex) {}
-        for (Node node : neighbours) {
+        Set<Node> tempNeighbours;
+        synchronized (this) {
+            tempNeighbours = new HashSet<>(neighbours);
+        }
+        for (Node node:tempNeighbours) {
             node.hello(this);
         }
-        try {
-            Thread.sleep(50);
-        } catch (InterruptedException ex) {}
+
     }
-    public void hello(Node neighbour) {
-        if (neighbours.contains(neighbour) == false) {
-            ElectionNode node = (ElectionNode) neighbour;
-            System.out.println("ERROR: Node " + id + " doesnt know its neighbour " + node.id);
+
+
+    /**
+     * Erhalten einer Hello Nachricht. Synchronized: Der sendende Thread hält den Lock vom empfangenden Node
+     * @param neighbour Der Nachbarknoten der diese wakeup Nachricht verschickt
+     */
+    public synchronized void hello(Node neighbour) {
+
+        if (neighbours.contains(neighbour) == false){
+            neighbours.add(neighbour);
+            System.out.println("Node " + id + " added unknown Neigbour " + neighbour.id);
         }
     }
 }
