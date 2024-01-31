@@ -6,19 +6,20 @@ public class ElectionDemo {
 
 
     public static void main(String[] args) throws InterruptedException {
-        while (true) {
+        if (true) {
             System.out.println("Creating Network....");
-            Node[] nodes = create8Network();
+            NodeThread[] nodes = createCompleteNetwork(10);
             System.out.println("Network created n = " + nodes.length);
 
-            for (Node node : nodes) {
+            for (NodeThread node : nodes) {
                 node.start();
             }
-            for (Node node : nodes) {
+            for (NodeThread node : nodes) {
                 node.join();
                 //System.out.println("Node " + node.id + " joined Main Thread");
             }
             Thread.sleep(1000);
+
         }
     }
 
@@ -28,8 +29,8 @@ public class ElectionDemo {
      * Der Graph sieht aus wie eine 8
      * @return ein Array mit allen Knoten. Index im Array stimmt mit ID des Knotens überein
      */
-    private static Node[] create8Network(){
-        Node[] nodes = new Node[6];
+    private static NodeThread[] create8Network(){
+        NodeThread[] nodes = new NodeThread[6];
         nodes[0] = new ElectionNode(0);
         nodes[1] = new ElectionNode(1);
         nodes[2] = new ElectionNode(2);
@@ -54,8 +55,8 @@ public class ElectionDemo {
      * Knoten 0 ist die Wurzel des Baumes, Knoten 2 und 5 sind Blätter
      * @return ein Array mit allen Knoten. Index im Array stimmt mit ID des Knotens überein
      */
-    private static Node[] createTreeNetwork(){
-        Node[] nodes = new Node[6];
+    private static NodeThread[] createTreeNetwork(){
+        NodeThread[] nodes = new NodeThread[6];
         nodes[0] = new ElectionNode(0);
         nodes[1] = new ElectionNode(1);
         nodes[2] = new ElectionNode(2);
@@ -78,20 +79,20 @@ public class ElectionDemo {
      * @param n Anzahl der Knoten
      * @return ein Array mit allen Knoten. Index im Array stimmt mit ID des Knotens überein
      */
-    private static Node[] createCompleteNetwork(int n){
-        Node[] nodes = new Node[n];
+    private static NodeThread[] createCompleteNetwork(int n){
+        NodeThread[] nodes = new NodeThread[n];
         for (int i = 0; i < n; i++){
             nodes[i] = new ElectionNode(i);
         }
 
         for (int i = 0; i < n; i++){
-            ArrayList<Node> neighbours = new ArrayList<>();
+            ArrayList<NodeThread> neighbours = new ArrayList<>();
             for (int j = 0; j < n; j++){
                 if (i != j){
                     neighbours.add(nodes[j]);
                 }
             }
-            nodes[i].setupNeighbours(neighbours.toArray(new Node[0]));
+            nodes[i].setupNeighbours(neighbours.toArray(new NodeThread[0]));
         }
         return nodes;
     }

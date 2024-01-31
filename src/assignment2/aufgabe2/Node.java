@@ -1,26 +1,10 @@
 package assignment2.aufgabe2;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * This interface defines the methods of each node participating in the echo
  * algorithm. These methods can be called by the neighbours of a node.
  */
-public abstract class Node extends Thread {
-	protected final int id;
-	protected final Set<Node> neighbours = new HashSet<Node>();
-
-	public Node(int id) {
-		super(Integer.toString(id));
-		this.id = id;
-	}
-
-	public void setupNeighbours(Node... neighbours) {
-		this.neighbours.clear();
-		this.neighbours.addAll(List.of(neighbours));
-	}
+public interface Node {
 
 	/**
 	 * Greetings from a neighbour. Before starting the echo algorithm this message
@@ -34,14 +18,15 @@ public abstract class Node extends Thread {
 	 * 
 	 * @param neighbour
 	 */
-	public abstract void hello(Node neighbour);
+	public void hello(Node neighbour);
 
 	/**
 	 * Incoming "wakeup" message from a neighbour.
 	 * 
 	 * @param neighbour
 	 */
-	public abstract void wakeup(Node neighbour, int initiatorId);
+	public void wakeup(Node neighbour, int initiatorId);
+
 	/**
 	 * Incoming "echo" message from a neighbour. The neighbour can also send some
 	 * data with this echo message. The data object might e.g. contain information
@@ -50,10 +35,11 @@ public abstract class Node extends Thread {
 	 * 
 	 * @param neighbour
 	 * @param data
+	 * @param initiatorId
 	 */
-	public abstract void echo(Node neighbour, Object data, int initiatorId, int highestVote);
+	public void echo(Node neighbour, Object data, int initiatorId);
 
-	public abstract void result(Node neighbour, int value);
+	public void setupNeighbours(Node... neighbours);
 
-
+	public int getId();
 }
