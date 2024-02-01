@@ -6,9 +6,9 @@ public class ElectionDemo {
 
 
     public static void main(String[] args) throws InterruptedException {
-        if (true) {
+        while (true) {
             System.out.println("Creating Network....");
-            NodeThread[] nodes = createCompleteNetwork(10);
+            NodeThread[] nodes = createCircleNetwork(10);
             System.out.println("Network created n = " + nodes.length);
 
             for (NodeThread node : nodes) {
@@ -93,6 +93,28 @@ public class ElectionDemo {
                 }
             }
             nodes[i].setupNeighbours(neighbours.toArray(new NodeThread[0]));
+        }
+        return nodes;
+    }
+
+    /**
+     * Erstellt einen Kreis Graphen mit n Knoten
+     * Alle Knoten sind mit genau 2 Nachbarn verbunden
+     * @param n Anzahl der Knoten
+     * @return ein Array mit allen Knoten. Index im Array stimmt mit ID des Knotens überein
+     */
+    private static NodeThread[] createCircleNetwork(int n){
+        NodeThread[] nodes = new NodeThread[n];
+        for (int i = 0; i < n; i++){
+            nodes[i] = new ElectionNode(i);
+        }
+
+        for (int i = 0; i < n; i++){
+            NodeThread nodeA = nodes[i];
+            NodeThread nodeB = nodes[(i+1) % nodes.length];
+            NodeThread nodeC = nodes[(i+2) % nodes.length];
+            nodeB.setupNeighbours(nodeA);
+            nodeB.setupNeighbours(nodeC);
         }
         return nodes;
     }
