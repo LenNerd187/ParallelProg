@@ -64,4 +64,8 @@ public abstract class NodeThread extends Thread {
 		System.out.println(result);
 	}
 
+	public void stopNode(){
+		running = false;
+	}
+
 }
