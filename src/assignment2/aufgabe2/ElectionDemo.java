@@ -119,4 +119,41 @@ public class ElectionDemo {
         return nodes;
     }
 
+    /**
+     * Erstellt einen Kreis Graphen mit n Knoten
+     * Alle Knoten sind mit genau 2 Nachbarn verbunden
+     * @param n Anzahl der Knoten
+     * @return ein Array mit allen Knoten. Index im Array stimmt mit ID des Knotens überein
+     */
+    private static NodeThread[] createLineNetwork(int n){
+
+        NodeThread[] nodes = new NodeThread[n];
+        for (int i = 0; i < nodes.length; i++){
+            nodes[i] = new ElectionNode(i);
+        }
+
+        nodes[0].setupNeighbours(nodes[1]);
+        for (int i = 0; i < nodes.length - 2; i++){
+            NodeThread nodeA = nodes[i];
+            NodeThread nodeB = nodes[(i+1) ];
+            NodeThread nodeC = nodes[(i+2) ];
+            nodeB.setupNeighbours(nodeA, nodeC);
+        }
+        nodes[nodes.length-1].setupNeighbours(nodes[nodes.length-2]);
+        return nodes;
+    }
+    /**
+     * Erstellt einen Wald Graphen mit n Knoten
+     * Alle Knoten stehen alleine, es gibt keine Kanten
+     * @param n Anzahl der Knoten
+     * @return ein Array mit allen Knoten. Index im Array stimmt mit ID des Knotens überein
+     */
+    private static NodeThread[] createForestNetwork(int n){
+
+        NodeThread[] nodes = new NodeThread[n];
+        for (int i = 0; i < nodes.length; i++){
+            nodes[i] = new ElectionNode(i);
+        }
+        return nodes;
+    }
 }
