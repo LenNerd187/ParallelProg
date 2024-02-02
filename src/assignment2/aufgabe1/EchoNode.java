@@ -87,12 +87,12 @@ public class EchoNode extends NodeAbstract{
 
     @Override
     public synchronized void wakeup(Node neighbour) {
-        System.out.println("Node " + name + " wakeup called");
+        System.out.println("Node " + name + " wakeup called from " + neighbour.toString());
         messageCounter++;
         if (wokeUpFrom == null){
             wokeUpFrom = neighbour;
         }
-        notify();   //TODO: compiler reordering?? notify darf erst ausgeführt nachdem wokeUpFrom gesetzt ist - ist beim Testen nie passiert
+        notifyAll();   //TODO: compiler reordering?? notify darf erst ausgeführt nachdem wokeUpFrom gesetzt ist - ist beim Testen nie passiert
     }
 
     @Override
@@ -104,7 +104,7 @@ public class EchoNode extends NodeAbstract{
             knownEdges.addAll(dataSet);
         }
         knownEdges.add(new Edge(name, echoNeighbour.name));
-        notify();
+        notifyAll();
     }
 
     @Override
